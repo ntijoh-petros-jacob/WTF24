@@ -1,0 +1,13 @@
+<div class="overview_container">  
+    <h2><%= @product['name'] %></h2> 
+    <img class='overview_image' src="/img/<%= @product['image_url'] %>" alt="<%= @product['name'] %>">
+    <p><%= @product['desc'] %></p>
+    <p>Pris: <%= @product['price'] %> Kronor LOL</p>
+</div>
+
+<% @comments.each do |comment| %>
+    <div class="comment-box"">
+      <h3 id="comment_commentor"><%= comment['commentor'] %>:</h3>
+      <p id="comment_comment"><%= comment['content'] %></p>
+    </div>
+<% end %>

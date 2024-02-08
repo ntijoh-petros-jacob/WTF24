@@ -1,0 +1,10 @@
+<% @products.each do |product| %>
+    <div class="product-box"">
+      <h2><%= product['name'] %></h2>
+      <img src="/img/<%= product['image_url'] %>" alt="Gorgen cd">
+      <p><%= product['desc'] %></p>
+      <p>Pris: <%= product['price'] %> Kronor LOL</p>
+    </div>
+<% end %>
+
+<a href='http://localhost:9292/products/add'> Lägg till product </a>
