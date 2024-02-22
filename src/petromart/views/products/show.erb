@@ -1,0 +1,39 @@
+<div class="overview_container">  
+    <h2><%= @product['name'] %></h2> 
+    <img class='overview_image' src="/img/<%= @product['image_url'] %>" alt="<%= @product['name'] %>">
+    <p><%= @product['desc'] %></p>
+    <p>Pris: <%= @product['price'] %> Kronor LOL</p>
+</div>
+
+<div class="tags_container">
+<h3>Tags:</h3>
+  <% @product_tags.each do |product_tag|%>
+    <div class="tag">
+      <h4> <%= product_tag['tag']%> </h4>
+    </div>
+  <% end%>
+</div>
+
+<% @comments.each do |comment| %>
+    <div class="comment-box"">
+      <h3 id="comment_commentor"><%= comment['commentor'].capitalize %>:</h3>
+      <p id="comment_comment"><%= comment['content'] %></p>
+    </div>
+<% end %>
+
+<% if session[:user_id]%>
+
+  <form id="comment_maker" action="/products/<%= @product['id'] %>" method="post" enctype="multipart/form-data">
+
+    <p> <% session[:username]%> </p>
+
+    <label for="desc"> Your comment:</label>
+    <input type="text" id="comment" name="comment">
+
+    
+    <input type="submit" value="Upload">
+  </form>
+<%else%>
+  <p> Logga in för att kunna skriva kommentarer <p>
+<%end%>
+

@@ -14,15 +14,23 @@ def drop_tables
     db.execute('DROP TABLE IF EXISTS product_tags')
     db.execute('DROP TABLE IF EXISTS tags')
     db.execute('DROP TABLE IF EXISTS comments')
+    #db.execute('DROP TABLE IF EXISTS words')
 end
 
 def create_tables
+    #  db.execute('CREATE TABLE "words" (
+    #      "id"	INTEGER UNIQUE,
+    #      "text" TEXT,
+    #      PRIMARY KEY("id" AUTOINCREMENT)
+    #  )')
+
+
     db.execute('CREATE TABLE "users" (
-        "id"	INTEGER UNIQUE,
+        "id" INTEGER PRIMARY KEY AUTOINCREMENT,
         "username"	TEXT NOT NULL UNIQUE,
         "hashed_pass"	TEXT NOT NULL,
         "access_level"	INTEGER NOT NULL,
-        PRIMARY KEY("id" AUTOINCREMENT)
+        "salt_key" TEXT NOT NULL
     )')
     
     db.execute('CREATE TABLE "products" (
@@ -35,8 +43,8 @@ def create_tables
 
     db.execute('CREATE TABLE "product_tags" (
         "id"	INTEGER NOT NULL,
-        "product_id"	INTEGER NOT NULL UNIQUE,
-        "tag_id"	INTEGER NOT NULL UNIQUE,
+        "product_id"	INTEGER NOT NULL,
+        "tag_id"	INTEGER NOT NULL,
         PRIMARY KEY("id" AUTOINCREMENT)
     );')
 
@@ -56,29 +64,42 @@ def create_tables
 end
 
 def seed_tables
+
     users = [
-        {username: 'user1', hashed_pass: 'password1', access_level: 1},
-        {username: 'user2', hashed_pass: 'password2', access_level: 2}
-    ]
+        {username: "petros", hashed_pass: "$2a$12$iSCZuGamLm5IM3oD4OLn2ed3bbnwZjCGSHln.n7uyw./637KQtpRG", access_level: 2, salt_key: 'song'}
+     ] #Lösenordet innan hash är: petros
 
     products = [
-        {name: 'Görgen CD', desc: 'Instrumental x ∈ inte primtal', price: 500, image_url: 'gorgencd.jpg'},
-        {name: 'Goa Bananer!', desc: 'Långa gula frukter!', price: 15, image_url: 'gorgencd.jpg'},
-        {name: 'Apple', desc: 'Fresh and juicy', price: 2, image_url: 'gorgencd.jpg'},
-        {name: 'Orange', desc: 'Vitamin C-packed', price: 1, image_url: 'gorgencd.jpg'},
-        {name: 'Milk', desc: 'Fresh milk', price: 3, image_url: 'gorgencd.jpg'},
-        {name: 'Bread', desc: 'Whole grain bread', price: 2, image_url: 'gorgencd.jpg'},
-        {name: 'Eggs', desc: 'Farm-fresh eggs', price: 4, image_url: 'gorgencd.jpg'}
+        {name: 'Görgen CD', desc: 'Instrumental x ∈ inte primtal', price: 500, image_url: 'gorgencd.png'},
+        {name: 'Goa Bananer!', desc: 'Långa gula frukter!', price: 15, image_url: 'gorgencd.png'},
+        {name: 'Apple', desc: 'Fresh and juicy', price: 2, image_url: 'gorgencd.png'},
+        {name: 'Orange', desc: 'Vitamin C-packed', price: 1, image_url: 'gorgencd.png'},
+        {name: 'Milk', desc: 'Fresh milk', price: 3, image_url: 'gorgencd.png'},
+        {name: 'Bread', desc: 'Whole grain bread', price: 2, image_url: 'gorgencd.png'},
+        {name: 'Eggs', desc: 'Farm-fresh eggs', price: 4, image_url: 'gorgencd.png'}
     ]
 
     product_tags = [
-        {product_id: 1, tag_id: 1},
-        {product_id: 2, tag_id: 2}
-    ]
+    {product_id: 1, tag_id: 1}, # Görgen CD är ekologisk
+    {product_id: 1, tag_id: 2}, # Görgen CD är glutenfri
+    {product_id: 2, tag_id: 3}, # Goa Bananer! är en frukt
+    {product_id: 2, tag_id: 1}, # Goa Bananer! är en frukt
+    {product_id: 3, tag_id: 3}, # Äpple är en frukt
+    {product_id: 3, tag_id: 1}, # Goa Bananer! är en frukt
+    {product_id: 4, tag_id: 3}, # Apelsin är en frukt
+    {product_id: 4, tag_id: 1}, # Goa Bananer! är en frukt
+    {product_id: 5, tag_id: 4}, # Mjölk är mejeri
+    {product_id: 5, tag_id: 1}, # Mjölk är ekologisk
+    {product_id: 6, tag_id: 4}, # Bröd är mejeri
+    {product_id: 7, tag_id: 5} # Ägg är veganska
+    ]   
 
     tags = [
-        {tag: 'Tag1'},
-        {tag: 'Tag2'}
+    {tag: 'Organic'},
+    {tag: 'Gluten-Free'},
+    {tag: 'Fruit'},
+    {tag: 'Dairy'},
+    {tag: 'Vegan'}
     ]
 
     comments = [
@@ -87,9 +108,11 @@ def seed_tables
         { content: "Love it!", commentor: "Glenn", product_comment_id: "2" }
     ]
 
+
+
     # Inserting data into the tables
     users.each do |user|
-        db.execute('INSERT INTO users (username, hashed_pass, access_level) VALUES (?,?,?)', user[:username], user[:hashed_pass], user[:access_level])
+        db.execute('INSERT INTO users (username, hashed_pass, access_level, salt_key) VALUES (?,?,?,?)', user[:username], user[:hashed_pass], user[:access_level], user[:salt_key])
     end
 
     products.each do |product|

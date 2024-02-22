@@ -3,7 +3,9 @@ header {
     background-color: wheat;
     display: flex;
     flex-direction: row;
-    justify-content: space-evenly;    
+    justify-content: space-evenly;   
+    align-items: center; 
+    min-height: 8vh;
 }
 
 main {
@@ -28,6 +30,10 @@ body {
       "ft"; 
 }
 
+a { 
+    color: inherit; 
+} 
+
 .product-box {
     border: 1px solid #ccc;
     padding: 10px;
@@ -38,7 +44,7 @@ body {
 
 .product-box img {
     width: 100%; 
-    height: auto; 
+    height: 100%; 
 }
 
 .add-product {
@@ -71,3 +77,31 @@ body {
 #comment_commentor, #comment_comment {
     margin-left: 20px;
 } 
+
+.product_picture {
+    width: 5    ;
+}
+
+.cart {
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;   
+
+}
+
+.tags_container {
+
+    margin: 10px;
+    margin-left: 30px;
+    margin-right: 30px;
+    display: flex;
+    flex-direction: row;
+    border:1px solid black;
+    border-radius: 25px;
+}
+
+.tag {
+
+    margin: 10px;
+}

@@ -6,18 +6,38 @@
     <title>PetroMart</title>
    <link rel="stylesheet" type="text/css" href="/css/style.css">
    <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
-
-
-    
 </head>
 <body>
 
 <header>
-    <p> 1 </p>
-    <p> 2 </p>
-    <p> 3 </p>
-    <p> 4 </p>
-    <p> 5 </p>    
+
+<a href="/products">
+    <button>Gå till produkter</button>
+</a>
+
+<% if session[:user_id] %>
+  <p>Välkommen, <%= session[:username].capitalize %>! </p>
+ <p>Antal saker i kundvagn: <%=   session[:cart].length%> </p>
+
+  <a href="/logout">
+    <button>Logout</button>
+  </a>
+
+  <a href="/cart">
+    <button>Gå till kundvagn</button>
+  </a>
+<% else %>
+  <p>Du är inte inloggad.</p>
+<a href="/register">
+    <button>Register</button>
+</a>
+
+<a href="/login">
+    <button>Login</button>
+</a>
+<% end %>
+
+
 </header>
 <main>
      <%= yield %>
