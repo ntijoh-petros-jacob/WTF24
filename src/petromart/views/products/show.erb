@@ -17,7 +17,7 @@
 <% @comments.each do |comment| %>
     <div class="comment-box"">
       <h3 id="comment_commentor"><%= comment['commentor'].capitalize %>:</h3>
-      <p id="comment_comment"><%= comment['content'] %></p>
+      <p id="comment_comment"><%= comment['content']() %></p>
     </div>
 <% end %>
 

@@ -1,6 +1,7 @@
 <div class="cart">
 
     <% price_sum = 0 %>
+
     <% session[:cart].each do |id| %>
       <div class="cart_item">
       <% product_id = id.to_i %>

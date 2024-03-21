@@ -1,6 +1,23 @@
 class App < Sinatra::Base
     enable :sessions
 
+    helpers do
+        def h(text)
+          Rack::Utils.escape_html(text)
+        end
+      
+        def hattr(text)
+          Rack::Utils.escape_path(text)
+        end
+    end
+
+
+    before do 
+        if session[:user_id]
+            @user = db.execute('SELECT * FROM users WHERE id =?', session[:user_id])
+        end
+    end
+
     def db
         if @db == nil
             @db = SQLite3::Database.new('./db/db.sqlite')
@@ -14,9 +31,7 @@ class App < Sinatra::Base
     end
 
     get '/products' do
-        if session[:user_id]
-            @user = db.execute('SELECT * FROM users WHERE id = ?', session[:user_id])
-        end
+
         @products = db.execute('SELECT * FROM products')
         erb :'products/index'
     end
@@ -57,7 +72,7 @@ class App < Sinatra::Base
 
     post '/products/:id' do |id|
         @id = id
-        db.execute("INSERT INTO comments (content, commentor, product_comment_id) VALUES (?,?,?)", [params['comment'], session[:username], id])
+        db.execute("INSERT INTO comments (content, commentor, product_comment_id) VALUES (?,?,?)", [h(params['comment']), @user['username'], id])
         redirect "/products/#{id}"
     end
 
@@ -67,29 +82,21 @@ class App < Sinatra::Base
     end
     post '/login' do
         user = db.execute('SELECT * FROM users WHERE username = ?', params['username']).first
-        session.delete(:user_no_exist)
-        session.delete(:wrong_pass)
 
 
         if user
             if BCrypt::Password.new(user['hashed_pass']) == (params['password'].chomp + user['salt_key'].chomp)
                 puts "Password matches!"
                 session[:user_id] = user['id']
-                session[:username] = user['username']
-                session[:cart] = [] 
                 if user['access_level'] == 2
-                    puts "PENIS PENIS"
-                    session[:admin] = true
                 end
                 redirect '/products'
             else
                 puts "Password does not match!"
-                session[:wrong_pass] = true
                 redirect '/login'
             end
         else
             puts "User not found!"
-            session[:user_no_exist] = true
             redirect '/login'
         end
     end     
@@ -104,7 +111,6 @@ class App < Sinatra::Base
     end
 
     post '/register' do
-        session[:username_busy] = false
         user_check = db.execute('SELECT * FROM users WHERE username = ?', params['username'])
         p user_check
         if user_check == []
@@ -115,12 +121,13 @@ class App < Sinatra::Base
             redirect '/login'
         else
             puts "användarnamnet är upptaget yäni"
-            session[:username_busy] = true
             redirect '/register'
         end
     end
     
     post '/cart/:id' do |id|
+        @cart = db.execute('SELECT * FROM cart (user_id, )')
+        db.execute('INSERT INTO cart (user_id, )')
         session[:cart] << id
         redirect '/products'
     end

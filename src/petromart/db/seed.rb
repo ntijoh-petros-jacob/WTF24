@@ -14,6 +14,7 @@ def drop_tables
     db.execute('DROP TABLE IF EXISTS product_tags')
     db.execute('DROP TABLE IF EXISTS tags')
     db.execute('DROP TABLE IF EXISTS comments')
+    db.execute('DROP TABLE IF EXISTS cart')
     #db.execute('DROP TABLE IF EXISTS words')
 end
 
@@ -24,6 +25,12 @@ def create_tables
     #      PRIMARY KEY("id" AUTOINCREMENT)
     #  )')
 
+
+    db.execute('CREATE TABLE "cart"(
+        "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+        "user_id" INTEGER NOT NULL,
+        "product_id" INTEGER NOT NULL
+    )')
 
     db.execute('CREATE TABLE "users" (
         "id" INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,6 +68,15 @@ def create_tables
         "product_comment_id"  INTEGER,
         PRIMARY KEY("id" AUTOINCREMENT)
     )')
+
+    db.execute('CREATE TABLE "cart" (
+        "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+        "product_id" INTEGER NOT NULL,
+        "user_id" INTEGER NOT NULL
+    )
+
+
+    ')
 end
 
 def seed_tables
