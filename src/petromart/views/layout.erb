@@ -16,8 +16,9 @@
 </a>
 
 <% if session[:user_id] %>
-  <p>Välkommen, <%= session[:username].capitalize %>! </p>
- <p>Antal saker i kundvagn: <%=   session[:cart].length%> </p>
+  <p>Välkommen <%= @user['username'].capitalize %>! </p>
+ <p>Antal saker i kundvagn: <%= @cart.length%> </p>
+ <p> <%= @cart[1] %> </p>
 
   <a href="/logout">
     <button>Logout</button>

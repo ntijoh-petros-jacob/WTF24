@@ -1,24 +1,25 @@
 <div class="cart">
+  <% price_sum = 0 %>
 
-    <% price_sum = 0 %>
-
-    <% session[:cart].each do |id| %>
-      <div class="cart_item">
-      <% product_id = id.to_i %>
-      <% products = db.execute('SELECT * FROM products WHERE id = ?', product_id) %>
-      <% products.each do |product| %>
-        <%= product['name'] %>
-        <%=" #{product['price']} kr "%>
-        <% price_sum += product['price'] %>
-          </div>
-      <% end %>
+ <% @cart.each do |product_id| %>
+  <div class="cart_item">
+    <% product = db.execute('SELECT * FROM products WHERE id = ?', product_id).first %>
+    <% if product %>
+      <%= product['name'] %>
+      <% price = product['price'].to_i %>
+      <%= " #{price} kr" %>
+      <% price_sum += price %>
     <% end %>
-    <%if session[:cart] != []%>
-      <h3>Din pris summa är <%= price_sum %> kr.</h3>
-      <form id="buy" action="/buy" >
-          <input type="submit" value="Köp">
-      </form>
-    <%else%>
-      <h3>Din kundvagn är tom. Lägg till produkter i vagnen för att kunna köpa </h3>
-    <%end%>
+  </div>
+<% end %>
+
+
+  <% if @cart != [] %>
+    <h3>Din pris summa är <%= price_sum %> kr.</h3>
+    <form id="buy" action="/buy">
+      <input type="submit" value="Köp">
+    </form>
+  <% else %>
+    <h3>Din kundvagn är tom. Lägg till produkter i vagnen för att kunna köpa</h3>
+  <% end %>
 </div>

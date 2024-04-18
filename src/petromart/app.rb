@@ -1,6 +1,14 @@
 class App < Sinatra::Base
     enable :sessions
 
+    def db
+        if @db == nil
+            @db = SQLite3::Database.new('./db/db.sqlite')
+            @db.results_as_hash = true
+        end
+        return @db
+    end
+
     helpers do
         def h(text)
           Rack::Utils.escape_html(text)
@@ -14,17 +22,19 @@ class App < Sinatra::Base
 
     before do 
         if session[:user_id]
-            @user = db.execute('SELECT * FROM users WHERE id =?', session[:user_id])
+            @user = db.execute('SELECT * FROM users WHERE id = ?', session[:user_id]).first
+            cart_items = db.execute('SELECT * FROM carts WHERE user_id = ?', session[:user_id])
+            
+            @cart = []
+            
+            cart_items.each do |item|
+                @cart << item["product_id"]
+            end
+
         end
     end
 
-    def db
-        if @db == nil
-            @db = SQLite3::Database.new('./db/db.sqlite')
-            @db.results_as_hash = true
-        end
-        return @db
-    end
+  
 
     get '/' do
         redirect '/products'
@@ -85,7 +95,7 @@ class App < Sinatra::Base
 
 
         if user
-            if BCrypt::Password.new(user['hashed_pass']) == (params['password'].chomp + user['salt_key'].chomp)
+            if BCrypt::Password.new(user['hashed_pass']) == (params['password'].chomp)
                 puts "Password matches!"
                 session[:user_id] = user['id']
                 if user['access_level'] == 2
@@ -114,10 +124,8 @@ class App < Sinatra::Base
         user_check = db.execute('SELECT * FROM users WHERE username = ?', params['username'])
         p user_check
         if user_check == []
-            salt_word = db.execute('SELECT text FROM words where id = ?', rand(1..50)).first
-            salt_key = salt_word['text'].chomp
-            hashed_pass = BCrypt::Password.create("#{params['cleartext_password'].to_s.chomp + salt_key.chomp}") 
-            db.execute('INSERT INTO users (username, hashed_pass, access_level, salt_key) VALUES (?,?,?,?)', params['username'], hashed_pass, 1, salt_key)
+            hashed_pass = BCrypt::Password.create("#{params['cleartext_password'].to_s.chomp}") 
+            db.execute('INSERT INTO users (username, hashed_pass, access_level) VALUES (?,?,?)', params['username'], hashed_pass, 1)
             redirect '/login'
         else
             puts "användarnamnet är upptaget yäni"
@@ -126,13 +134,11 @@ class App < Sinatra::Base
     end
     
     post '/cart/:id' do |id|
-        @cart = db.execute('SELECT * FROM cart (user_id, )')
-        db.execute('INSERT INTO cart (user_id, )')
-        session[:cart] << id
-        redirect '/products'
+        
     end
 
     get '/cart' do
+        @cart = db.execute('SELECT * FROM carts')
         erb :'buys/show'
     end
 

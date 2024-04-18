@@ -14,19 +14,12 @@ def drop_tables
     db.execute('DROP TABLE IF EXISTS product_tags')
     db.execute('DROP TABLE IF EXISTS tags')
     db.execute('DROP TABLE IF EXISTS comments')
-    db.execute('DROP TABLE IF EXISTS cart')
-    #db.execute('DROP TABLE IF EXISTS words')
+    db.execute('DROP TABLE IF EXISTS carts')
 end
 
 def create_tables
-    #  db.execute('CREATE TABLE "words" (
-    #      "id"	INTEGER UNIQUE,
-    #      "text" TEXT,
-    #      PRIMARY KEY("id" AUTOINCREMENT)
-    #  )')
 
-
-    db.execute('CREATE TABLE "cart"(
+    db.execute('CREATE TABLE "carts"(
         "id" INTEGER PRIMARY KEY AUTOINCREMENT,
         "user_id" INTEGER NOT NULL,
         "product_id" INTEGER NOT NULL
@@ -36,8 +29,7 @@ def create_tables
         "id" INTEGER PRIMARY KEY AUTOINCREMENT,
         "username"	TEXT NOT NULL UNIQUE,
         "hashed_pass"	TEXT NOT NULL,
-        "access_level"	INTEGER NOT NULL,
-        "salt_key" TEXT NOT NULL
+        "access_level"	INTEGER NOT NULL
     )')
     
     db.execute('CREATE TABLE "products" (
@@ -69,22 +61,18 @@ def create_tables
         PRIMARY KEY("id" AUTOINCREMENT)
     )')
 
-    db.execute('CREATE TABLE "cart" (
-        "id" INTEGER PRIMARY KEY AUTOINCREMENT,
-        "product_id" INTEGER NOT NULL,
-        "user_id" INTEGER NOT NULL
-    )
-
-
-    ')
 end
 
 def seed_tables
 
     users = [
-        {username: "petros", hashed_pass: "$2a$12$iSCZuGamLm5IM3oD4OLn2ed3bbnwZjCGSHln.n7uyw./637KQtpRG", access_level: 2, salt_key: 'song'}
-     ] #Lösenordet innan hash är: petros
+        {username: "petros", hashed_pass: "$2a$12$vBdmbhMGQn0bs3qISm1VGODSYcO41AOBcZtdVXmkWBCnhggnfmBkW", access_level: 2}
+    ] #Lösenordet innan hash är: petros
 
+    carts = [
+        {user_id: 1, product_id: 1}, {user_id: 1, product_id: 2}, {user_id: 1, product_id: 3}, {user_id: 1, product_id: 4}
+
+    ]
     products = [
         {name: 'Görgen CD', desc: 'Instrumental x ∈ inte primtal', price: 500, image_url: 'gorgencd.png'},
         {name: 'Goa Bananer!', desc: 'Långa gula frukter!', price: 15, image_url: 'gorgencd.png'},
@@ -128,7 +116,7 @@ def seed_tables
 
     # Inserting data into the tables
     users.each do |user|
-        db.execute('INSERT INTO users (username, hashed_pass, access_level, salt_key) VALUES (?,?,?,?)', user[:username], user[:hashed_pass], user[:access_level], user[:salt_key])
+        db.execute('INSERT INTO users (username, hashed_pass, access_level) VALUES (?,?,?)', user[:username], user[:hashed_pass], user[:access_level])
     end
 
     products.each do |product|
@@ -145,6 +133,10 @@ def seed_tables
 
     comments.each do |comment|
         db.execute('INSERT INTO comments (content, commentor, product_comment_id) VALUES (?,?,?)', comment[:content], comment[:commentor], comment[:product_comment_id])
+    end
+
+    carts.each do |cart|
+        db.execute('INSERT INTO carts (user_id, product_id) VALUES (?,?)', cart[:user_id], cart[:product_id])
     end
 end
 
