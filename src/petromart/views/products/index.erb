@@ -6,13 +6,15 @@
       <p><%= product['desc'] %></p>
       <p>Pris: <%= product['price'] %> Kronor LOL</p>
         <% if session[:user_id] %>
-    <form id="add_to_cart" action="/cart/<%= product['id'] %>" method="post">  
+    <form id="add_to_cart" action="/carts/<%= product['id'] %>" method="post">  
       <input type="submit" value="Lägg i kundvagn">
     </form>
   <% end %>
     </div>
   </a>
 <% end %>
-<% if session[:admin] == true%>
-  <a href='http://localhost:9292/products/add'> Lägg till product </a>
-<%end%>
+<%if session[:user_id]%>
+  <% if @user['access_level'] == 2%>
+    <a href='http://localhost:9292/products/add'> Lägg till product </a>
+  <%end%>
+<% end%>

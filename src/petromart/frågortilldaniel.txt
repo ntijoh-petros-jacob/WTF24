@@ -1,0 +1,3 @@
+borde jag skapa en hel modul bara för comments, för den är typ en del av products gruppen så kan jag ha den där.
+
+Borde jag kolla om ALla parameters är ifyllda?

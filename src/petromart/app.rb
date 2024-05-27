@@ -1,6 +1,12 @@
+require_relative 'modules/users'
+require_relative 'modules/products'
+require_relative 'modules/carts'
+
+require 'sinatra/flash'
+
 class App < Sinatra::Base
     enable :sessions
-
+    register Sinatra::Flash 
     def db
         if @db == nil
             @db = SQLite3::Database.new('./db/db.sqlite')
@@ -13,24 +19,22 @@ class App < Sinatra::Base
         def h(text)
           Rack::Utils.escape_html(text)
         end
-      
-        def hattr(text)
-          Rack::Utils.escape_path(text)
-        end
+    
     end
 
 
     before do 
         if session[:user_id]
-            @user = db.execute('SELECT * FROM users WHERE id = ?', session[:user_id]).first
-            cart_items = db.execute('SELECT * FROM carts WHERE user_id = ?', session[:user_id])
-            
-            @cart = []
-            
-            cart_items.each do |item|
-                @cart << item["product_id"]
+            @user = Users.select(session[:user_id])
+            if Carts.select(session[:user_id]) != nil
+                cart_items = Carts.select(session[:user_id])
+                
+                @cart = []
+                
+                cart_items.each do |item|
+                    @cart << item["product_id"]
+                end
             end
-
         end
     end
 
@@ -41,8 +45,7 @@ class App < Sinatra::Base
     end
 
     get '/products' do
-
-        @products = db.execute('SELECT * FROM products')
+        @products = Products.all
         erb :'products/index'
     end
 
@@ -51,38 +54,40 @@ class App < Sinatra::Base
     end
 
     post '/products/add' do
-        if params[:file]
-            file = params[:file][:tempfile]
-            image_url = params[:file][:filename]
-            directory = File.join(settings.root, "public", "img")
-            FileUtils.mkdir_p(directory) unless File.directory?(directory)
-            File.open(File.join(directory, image_url), "wb") do |f|
-              f.write(file.read)
+        if @user['access_level'] == 2
+            if params[:file] != nil
+                file = params[:file][:tempfile]
+                image_url = params[:file][:filename]
+                directory = File.join(settings.root, "public", "img")
+                FileUtils.mkdir_p(directory) unless File.directory?(directory)
+                File.open(File.join(directory, image_url), "wb") do |f|
+                    f.write(file.read)
+                end
+                name = params['name']
+                desc = params['desc']
+                price = params['price']
+                image_url = params[:file][:filename]
+                Products.insert(h(name), h(desc), h(price), image_url)
+            else
+                "No image uploaded"
             end
-          else
-            "No file uploaded"
-          end
+        end
 
-        name = params['name']
-        desc = params['desc']
-        price = params['price']
-        image_url = params[:file][:filename]
-        db.execute("INSERT INTO products (name, desc, price, image_url) VALUES (?,?,?,?)", [name, desc, price, image_url])
-        redirect "/"
+        redirect '/products'
     end
 
 
     get '/products/:id' do |id|
-        @product = db.execute('SELECT * FROM products WHERE id = ?', id).first
-        @comments = db.execute('SELECT * from products INNER JOIN comments ON products.id = comments.product_comment_id WHERE products.id = ?',id)  
-        @product_tags = db.execute('SELECT * FROM products JOIN product_tags ON products.id = product_tags.product_id JOIN tags ON product_tags.tag_id = tags.id WHERE products.id = ?',id)
+        @product = Products.select(id)
+        @comments = Products.comments(id)
+        @product_tags = Products.tags(id)
         erb :'products/show'
         
     end
 
     post '/products/:id' do |id|
         @id = id
-        db.execute("INSERT INTO comments (content, commentor, product_comment_id) VALUES (?,?,?)", [h(params['comment']), @user['username'], id])
+        Products.createComment( h(params['comment']), @user['username'], id)
         redirect "/products/#{id}"
     end
 
@@ -90,22 +95,33 @@ class App < Sinatra::Base
     get '/login' do
         erb :'users/login'
     end
+
     post '/login' do
-        user = db.execute('SELECT * FROM users WHERE username = ?', params['username']).first
-
-
-        if user
-            if BCrypt::Password.new(user['hashed_pass']) == (params['password'].chomp)
-                puts "Password matches!"
-                session[:user_id] = user['id']
-                if user['access_level'] == 2
+        user_data = Users.selectWithUsername(h(params['username']))
+        
+        if (user_data != nil)
+            if Users.last_login_attempt(user_data['id'])
+                latest_attempt = Users.last_login_attempt(user_data['id'])['date']
+                if Time.now - Time.parse(latest_attempt) <= 3
+                    puts "FART FARt FART"
+                    flash[:tranquilo] = "SAKTA I BACKARNA BRUSH, vänta 3 sekunder innan du försöker igen"
+                    redirect '/login'
                 end
+            end
+ 
+            if BCrypt::Password.new(user_data['hashed_pass']) == (h(params['password'].chomp))
+                puts "Password matches!"
+                Users.attempted_login(user_data['id'], 1)
+                session[:user_id] = user_data['id']
                 redirect '/products'
             else
+                Users.attempted_login(user_data['id'], 0)
                 puts "Password does not match!"
                 redirect '/login'
             end
         else
+
+            flash[:user_no_exist] = "User not found!"
             puts "User not found!"
             redirect '/login'
         end
@@ -121,31 +137,55 @@ class App < Sinatra::Base
     end
 
     post '/register' do
-        user_check = db.execute('SELECT * FROM users WHERE username = ?', params['username'])
-        p user_check
-        if user_check == []
-            hashed_pass = BCrypt::Password.create("#{params['cleartext_password'].to_s.chomp}") 
-            db.execute('INSERT INTO users (username, hashed_pass, access_level) VALUES (?,?,?)', params['username'], hashed_pass, 1)
+        user_check = Users.selectWithUsername(h(params['username']))
+        if user_check == nil
+            hashed_pass = BCrypt::Password.create(h("#{params['cleartext_password'].chomp}") )
+            Users.create(h(params['username']), hashed_pass, 1)
             redirect '/login'
         else
             puts "användarnamnet är upptaget yäni"
             redirect '/register'
         end
     end
+        
+    post '/carts/copped' do
+        if session[:user_id]
+            if @user['access_level'] >= 1
+                Carts.delete(session[:user_id])
+                puts "deleted from carts"
+            else
+                puts "ej inloggad"
+            end
+        end
+        redirect '/carts/copped'
+    end
     
-    post '/cart/:id' do |id|
+    post '/carts/:id' do |id_product|
+        if @user['access_level'] >= 1
+            Carts.create(session[:user_id], id_product)
+            puts "added to carts"
+        end
+        redirect '/products'
         
     end
 
-    get '/cart' do
-        @cart = db.execute('SELECT * FROM carts')
-        erb :'buys/show'
+    get '/carts/show' do
+        @products = Products.all
+        erb :'carts/show'
     end
 
-    get '/buy' do
-        session[:cart] = []
-        erb :'buys/copped'
+    get '/carts/copped' do
+        erb :'carts/copped'
     end 
+
+    
+    post '/products/show/delete/:id' do |id|
+        if @user['access_level'] == 2
+            puts "DELETE FÖRSÖK AV PRODUCT"
+            Products.delete(id)
+        end
+        redirect '/products'
+    end
 
 end
 

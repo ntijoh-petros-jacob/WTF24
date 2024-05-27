@@ -1,0 +1,23 @@
+<div class="cart">
+<% if @cart != nil %> 
+  <% price_sum = 0 %>
+ <% @cart.each do |product_id| %>
+  <div class="cart_item">
+    <% product = db.execute('SELECT * FROM products WHERE id = ?', product_id.to_i ).first%>
+      <% if product %>
+      <%= product['name'] %>
+      <% price = product['price'].to_i %>
+      <%= " #{price} kr" %>
+      <% price_sum += price %>
+    <% end %>
+  </div>
+<% end %>
+
+    <h3>Din pris summa är <%= price_sum %> kr.</h3>
+    <form id="buy" action="/carts/copped" method="post">
+      <input type="submit" value="Köp">
+    </form>
+  <% else %>
+    <h3> Logga in för att kunna lägga till saker i din </h3>
+  <% end %>
+</div>

@@ -1,19 +1,15 @@
-<% if session[:user_no_exist]%>
-  <p>Användaren exister inte!</p>
-<% elsif session[:wrong_pass]%>
-  <p>Fel lössenord! </p>
-<%end%>
- 
+<h3>LOGIN</h3>
 
- 
- <form id="comment_maker" action="/login" method="post" enctype="multipart/form-data">
+<form id="comment_maker" action="/login" method="post" enctype="multipart/form-data">
 
-    <label for="name">Username:</label>
-    <input type="text" id="username" name="username">
+  <label for="name">Username:</label>
+  <input type="text" id="username" name="username">
 
-    <label for="desc"> Password:</label>
-    <input type="text" id="password" name="password">
+  <label for="desc"> Password:</label>
+  <input type="text" id="password" name="password">
 
     
-    <input type="submit" value="Login">
-  </form>
+  <input type="submit" value="Login">
+</form>
+<p><%=flash[:tranquilo] %> </p> 
+<p><%=flash[:user_no_exist] %> </p> 
